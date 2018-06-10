@@ -52,7 +52,7 @@ met_group(x) = vgroup("", x);
 // ============================================= PROGRAM =
 // =======================================================
 
-flute_out = fl_sixch
+flute_out = fl_at
   with{
     at1 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch1", 1., 0., 1000., 0.1))) ;
     at2 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch2", 2., 0., 1000., 0.1))) ;
@@ -61,11 +61,11 @@ flute_out = fl_sixch
     at5 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch5", 5., 0., 1000., 0.1))) ;
     at6 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch6", 6., 0., 1000., 0.1))) ;
 
-    fl_sixch = flute_group(vgroup("[2] OUTPUTS", _ <:
-    hgroup("[0]", at1,at2,at3,at4,at5,at6) : hmeter, hmeter, hmeter, hmeter, hmeter, hmeter));
+    fl_at = flute_group(vgroup("[0] FL OUT", _ <:
+    hgroup("[0]", at1,at2,at3,at4,at5,at6)));
 };
 
-dbass_out = fl_sixch
+dbass_out = db_at
   with{
     at1 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch1", 1., 0., 1000., 0.1))) ;
     at2 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch2", 2., 0., 1000., 0.1))) ;
@@ -74,11 +74,11 @@ dbass_out = fl_sixch
     at5 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch5", 5., 0., 1000., 0.1))) ;
     at6 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch6", 6., 0., 1000., 0.1))) ;
 
-    fl_sixch = flute_group(vgroup("[2] OUTPUTS", _ <:
-    hgroup("[0]", at1,at2,at3,at4,at5,at6) : hmeter, hmeter, hmeter, hmeter, hmeter, hmeter));
+    db_at = dbass_group(vgroup("[1] DB OUT", _ <:
+    hgroup("[0]", at1,at2,at3,at4,at5,at6)));
 };
 
-bsax_out = fl_sixch
+bsax_out = bs_at
   with{
     at1 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch1", 1., 0., 1000., 0.1))) ;
     at2 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch2", 2., 0., 1000., 0.1))) ;
@@ -87,13 +87,13 @@ bsax_out = fl_sixch
     at5 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch5", 5., 0., 1000., 0.1))) ;
     at6 = de.sdelay(192000,1024,ac.mt2samp(nentry("distance ch6", 6., 0., 1000., 0.1))) ;
 
-    fl_sixch = flute_group(vgroup("[2] OUTPUTS", _ <:
-    hgroup("[0]", at1,at2,at3,at4,at5,at6) : hmeter, hmeter, hmeter, hmeter, hmeter, hmeter));
+    bs_at = bsax_group(vgroup("[2] BS OUT", _ <:
+    hgroup("[0]", at1,at2,at3,at4,at5,at6)));
 };
 
 gs_m_comp = ba.bypass1(cbp,gs_mono_compressor)
 with{
-	comp_group(x) = flute_group(vgroup("[1] COMPRESSOR", x));
+	  comp_group(x) = vgroup("[1] COMPRESSOR", x);
   	meter_group(x) = comp_group(hgroup("[0]", x));
 	  kctl_group(x) = comp_group(hgroup("[1]", x));
 
@@ -116,7 +116,6 @@ with{
 };
 
 //process = fl_in : gs_m_comp : fl_out ;
-
 
 // =======================================================
 // ================================================= GUI =
@@ -149,8 +148,8 @@ in_gain = vslider("[1] Gain [unit:dB] [style:knob]", -20, -96, 12, 0.1) : ba.db2
 
 input_selector = _,_,_,_,_,_,_,_,_,_,_,_ : !,!,!,!,!,!,!,!,_,_,_,! ;
 
-flute_sel = _,_,_ : ba.selectn(3,0) : *(in_gain) : hmeter ;
-dbass_sel = _,_,_ : ba.selectn(3,0) : *(in_gain) : hmeter ;
-bsax_sel = _,_,_ : ba.selectn(3,0) : *(in_gain) : hmeter ;
+flute = _,_,_ : ba.selectn(3,0) : flute_group(vgroup("[0] flute", gs_m_comp : hmeter)) <: flute_out ;
+dbass = _,_,_ : ba.selectn(3,1) : dbass_group(vgroup("[1] dbass", gs_m_comp : hmeter)) <: dbass_out ;
+bsax = _,_,_ : ba.selectn(3,2) : bsax_group(vgroup("[2] bsax", gs_m_comp : hmeter)) <: bsax_out;
 
-process = input_selector <: flute_sel, dbass_sel, bsax_sel : gs_m_comp,gs_m_comp,gs_m_comp : flute_out, dbass_out, bsax_out :> hmeter, hmeter, hmeter, hmeter, hmeter, hmeter ;
+process = input_selector <: flute, dbass, bsax :> hmeter, hmeter, hmeter, hmeter, hmeter, hmeter ;
